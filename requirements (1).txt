@@ -1,0 +1,6 @@
+geemap
+earthengine-api
+rasterio
+requests
+setuptools>=50.0.0
+
