@@ -32,7 +32,7 @@ def add_ee_layer(self, ee_image_object, vis_params, name):
 folium.Map.add_ee_layer = add_ee_layer
 
 # === Earth Engine Asset & Visualisasi ===
-ASSET_ID = "users/mrgridhoarazzak/klasifikasi_asli_sangir"
+ASSET_ID = "projects/ee-mrgridhoarazzak/assets/Klasifikasi_Sangir_2024"
 vis_params = {
     "min": 0,
     "max": 3,
