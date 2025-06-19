@@ -39,7 +39,7 @@ vis_params = {
 
 # === UI Streamlit ===
 st.set_page_config(layout="wide")
-st.title("🌍 Peta RGB Wilayah Sangir")
+st.title("🌍 Peta Klasifikasi Penutupan Lahan dan Penggunaan Lahan Wilayah Sangir")
 st.markdown("**Visualisasi RGB berdasarkan citra di Google Earth Engine**")
 
 try:
