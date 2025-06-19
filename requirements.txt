@@ -2,3 +2,4 @@ streamlit
 folium
 streamlit-folium
 earthengine-api
+earthengine-api>=0.1.342
