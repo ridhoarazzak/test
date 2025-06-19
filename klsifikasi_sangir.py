@@ -4,29 +4,14 @@ from streamlit_folium import folium_static
 import ee
 import json
 
-# === Ambil kredensial langsung dari secrets (format dict / TOML) ===
-  try:
-    key_dict = dict(st.secrets["SERVICE_ACCOUNT_JSON"])
-    key_path = "/tmp/service_account.json"
+# === Ambil kredensial dari secrets ===
+key_dict = dict(st.secrets["SERVICE_ACCOUNT_JSON"])
+key_path = "/tmp/service_account.json"
+
+try:
     with open(key_path, "w") as f:
         json.dump(key_dict, f)
 
-    credentials = ee.ServiceAccountCredentials(
-        key_dict["client_email"],
-        key_path
-    )
-    ee.Initialize(credentials)
-
-except Exception as e:
-    st.error(f"❌ Gagal inisialisasi Earth Engine: {e}")
-    st.stop()
-
-    # Simpan sebagai file sementara
-    key_path = "/tmp/service_account.json"
-    with open(key_path, "w") as f:
-        json.dump(key_dict, f)
-
-    # Inisialisasi Earth Engine
     credentials = ee.ServiceAccountCredentials(
         key_dict["client_email"],
         key_path
