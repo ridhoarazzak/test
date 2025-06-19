@@ -1,1 +1,0 @@
-Ini file dari Google Colab yang diupload ke GitHub
