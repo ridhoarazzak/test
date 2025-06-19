@@ -1,17 +1,16 @@
 import streamlit as st
 import folium
-from streamlit_folium import folium_static
+from streamlit_folium import st_folium  # Ganti folium_static
 import ee
 
 # === Inisialisasi Earth Engine ===
 try:
     SERVICE_ACCOUNT = "razza-earth-engine-2025@ee-mrgridhoarazzak.iam.gserviceaccount.com"
     KEY_PATH = "service_account.json"
-
     credentials = ee.ServiceAccountCredentials(SERVICE_ACCOUNT, KEY_PATH)
     ee.Initialize(credentials)
 except Exception as e:
-    st.error(f"❌ Gagal inisialisasi Earth Engine: {e}")
+    st.error("❌ Gagal inisialisasi Earth Engine: %s" % e)
     st.stop()
 
 # === Fungsi bantu tambah layer EE ===
@@ -26,14 +25,12 @@ def add_ee_layer(self, ee_image_object, vis_params, name):
             control=True,
         ).add_to(self)
     except Exception as e:
-        st.error(f"❌ Gagal menambahkan layer EE: {e}")
+        st.error("❌ Gagal menambahkan layer EE: %s" % e)
 
 folium.Map.add_ee_layer = add_ee_layer
 
-# === Earth Engine Asset & Visualisasi RGB ===
+# === Visualisasi RGB ===
 ASSET_ID = "projects/ee-mrgridhoarazzak/assets/Klasifikasi_Sangir_2024_aset_asli"
-
-# GUNAKAN nama band RGB kamu, misalnya vis-red, vis-green, vis-blue
 vis_params = {
     "bands": ["vis-red", "vis-green", "vis-blue"],
     "min": 0,
@@ -47,14 +44,16 @@ st.markdown("**Visualisasi RGB berdasarkan citra di Google Earth Engine**")
 
 try:
     image = ee.Image(ASSET_ID)
-    
-    # DEBUG: Tampilkan band untuk verifikasi
+
+    # DEBUG: Tampilkan nama band
     band_names = image.bandNames().getInfo()
     st.write("Band citra:", band_names)
 
     m = folium.Map(location=[-1.80, 101.15], zoom_start=10)
     m.add_ee_layer(image, vis_params, "RGB Image")
     folium.LayerControl().add_to(m)
-    folium_static(m)
+
+    # Gunakan st_folium (pengganti folium_static)
+    st_folium(m, width=700, height=500)
 except Exception as e:
-    st.error(f"❌ Gagal menampilkan data: {e}")
+    st.error("❌ Gagal menampilkan data: %s" % e)
