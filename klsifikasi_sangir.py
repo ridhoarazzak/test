@@ -1,15 +1,14 @@
 import streamlit as st
 import folium
 from streamlit_folium import folium_static
+import json
 
-# Coba impor Earth Engine dan inisialisasi
+# === Inisialisasi Google Earth Engine dari secrets ===
 try:
     import ee
-    # Inisialisasi kredensial Earth Engine
     SERVICE_ACCOUNT = "razza-earth-engine-2025@ee-mrgridhoarazzak.iam.gserviceaccount.com"
-    KEY_PATH = "service_account.json"
-
-    credentials = ee.ServiceAccountCredentials(SERVICE_ACCOUNT, KEY_PATH)
+    SERVICE_ACCOUNT_JSON = json.loads(st.secrets["SERVICE_ACCOUNT_JSON"])
+    credentials = ee.ServiceAccountCredentials(SERVICE_ACCOUNT, key_data=SERVICE_ACCOUNT_JSON)
     ee.Initialize(credentials)
 except ModuleNotFoundError:
     st.error("Modul `earthengine-api` belum diinstal. Silakan install dengan `pip install earthengine-api`.")
@@ -18,7 +17,7 @@ except Exception as e:
     st.error(f"Gagal inisialisasi Earth Engine: {e}")
     st.stop()
 
-# Fungsi untuk menambahkan layer EE ke folium
+# === Fungsi bantu: tambahkan Earth Engine Image ke folium Map ===
 def add_ee_layer(self, ee_image_object, vis_params, name):
     try:
         map_id_dict = ee.Image(ee_image_object).getMapId(vis_params)
@@ -32,13 +31,12 @@ def add_ee_layer(self, ee_image_object, vis_params, name):
     except Exception as e:
         st.error(f"Gagal menambahkan layer EE ke peta: {e}")
 
-# Tambahkan fungsi ke folium.Map
 folium.Map.add_ee_layer = add_ee_layer
 
-# === Ganti dengan asset Earth Engine kamu ===
+# === Earth Engine Asset ID ===
 ASSET_ID = "users/mrgridhoarazzak/klasifikasi_asli_sangir"
 
-# Parameter visualisasi
+# === Parameter visualisasi klasifikasi ===
 vis_params = {
     "min": 0,
     "max": 3,
@@ -50,12 +48,12 @@ vis_params = {
     ]
 }
 
-# Tampilkan aplikasi di Streamlit
+# === Streamlit UI ===
 st.set_page_config(layout="wide")
 st.title("🌍 Peta Klasifikasi Sangir")
 st.markdown("**Hasil klasifikasi tutupan lahan di wilayah Sangir berdasarkan Google Earth Engine**")
 
-# Buat peta dan tambahkan layer
+# === Buat dan tampilkan peta ===
 try:
     image_klasifikasi = ee.Image(ASSET_ID)
     m = folium.Map(location=[1.1, 125.4], zoom_start=10)
