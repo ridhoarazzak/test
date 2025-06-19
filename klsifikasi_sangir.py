@@ -2,29 +2,20 @@ import streamlit as st
 import folium
 from streamlit_folium import folium_static
 import ee
-import json
 
-# === Ambil kredensial dari secrets ===
+# === Inisialisasi Earth Engine dengan file langsung ===
 try:
-    key_data = dict(st.secrets["SERVICE_ACCOUNT_JSON"])
+    SERVICE_ACCOUNT = "razza-earth-engine-2025@ee-mrgridhoarazzak.iam.gserviceaccount.com"
+    KEY_PATH = "service_account.json"  # File ini ada di folder yang sama dengan app.py
 
-    # Simpan ke file sementara
-    key_path = "/tmp/service_account.json"
-    with open(key_path, "w") as f:
-        json.dump(key_data, f)
-
-    # Inisialisasi Earth Engine pakai file
-    credentials = ee.ServiceAccountCredentials(
-        key_data["client_email"],
-        key_path
-    )
+    credentials = ee.ServiceAccountCredentials(SERVICE_ACCOUNT, KEY_PATH)
     ee.Initialize(credentials)
 
 except Exception as e:
     st.error(f"❌ Gagal inisialisasi Earth Engine: {e}")
     st.stop()
 
-# === Fungsi bantu untuk tambahkan layer EE ke peta folium ===
+# === Fungsi bantu layer EE ===
 def add_ee_layer(self, ee_image_object, vis_params, name):
     try:
         map_id_dict = ee.Image(ee_image_object).getMapId(vis_params)
@@ -36,12 +27,11 @@ def add_ee_layer(self, ee_image_object, vis_params, name):
             control=True,
         ).add_to(self)
     except Exception as e:
-        st.error(f"❌ Gagal menambahkan layer ke peta: {e}")
+        st.error(f"❌ Gagal menambahkan layer EE: {e}")
 
-# Tambahkan fungsi EE ke folium.Map
 folium.Map.add_ee_layer = add_ee_layer
 
-# === Earth Engine asset dan visualisasi ===
+# === Earth Engine Asset & Visualisasi ===
 ASSET_ID = "users/mrgridhoarazzak/klasifikasi_asli_sangir"
 vis_params = {
     "min": 0,
@@ -49,12 +39,11 @@ vis_params = {
     "palette": ['#006400', '#FFD700', '#FF0000', '#0000FF']
 }
 
-# === Antarmuka Streamlit ===
+# === UI Streamlit ===
 st.set_page_config(layout="wide")
 st.title("🌍 Peta Klasifikasi Sangir")
-st.markdown("**Hasil klasifikasi tutupan lahan di wilayah Sangir berdasarkan Google Earth Engine**")
+st.markdown("**Hasil klasifikasi tutupan lahan wilayah Sangir berdasarkan Google Earth Engine**")
 
-# === Tampilkan peta ===
 try:
     image = ee.Image(ASSET_ID)
     m = folium.Map(location=[1.1, 125.4], zoom_start=10)
@@ -62,4 +51,4 @@ try:
     folium.LayerControl().add_to(m)
     folium_static(m)
 except Exception as e:
-    st.error(f"❌ Gagal menampilkan data dari Earth Engine: {e}")
+    st.error(f"❌ Gagal menampilkan data: {e}")
