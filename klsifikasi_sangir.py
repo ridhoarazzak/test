@@ -1,21 +1,26 @@
 import streamlit as st
 import folium
 from streamlit_folium import folium_static
+import json
+import ee
+import os
 
-# === Inisialisasi Google Earth Engine dari secrets ===
+# === Tulis file sementara service_account.json dari secrets ===
+SERVICE_ACCOUNT = "razza-earth-engine-2025@ee-mrgridhoarazzak.iam.gserviceaccount.com"
+KEY_FILE_PATH = "/tmp/service_account.json"
+
+with open(KEY_FILE_PATH, "w") as f:
+    json.dump(st.secrets["SERVICE_ACCOUNT_JSON"], f)
+
+# === Inisialisasi Earth Engine ===
 try:
-    import ee
-    SERVICE_ACCOUNT = "razza-earth-engine-2025@ee-mrgridhoarazzak.iam.gserviceaccount.com"
-    credentials = ee.ServiceAccountCredentials(SERVICE_ACCOUNT, key_file_dict=st.secrets["SERVICE_ACCOUNT_JSON"])
+    credentials = ee.ServiceAccountCredentials(SERVICE_ACCOUNT, KEY_FILE_PATH)
     ee.Initialize(credentials)
-except ModuleNotFoundError:
-    st.error("Modul `earthengine-api` belum diinstal. Silakan install dengan `pip install earthengine-api`.")
-    st.stop()
 except Exception as e:
     st.error(f"Gagal inisialisasi Earth Engine: {e}")
     st.stop()
 
-# Fungsi bantu untuk menambahkan layer Earth Engine ke folium map
+# === Fungsi bantu untuk folium ===
 def add_ee_layer(self, ee_image_object, vis_params, name):
     try:
         map_id_dict = ee.Image(ee_image_object).getMapId(vis_params)
@@ -31,21 +36,22 @@ def add_ee_layer(self, ee_image_object, vis_params, name):
 
 folium.Map.add_ee_layer = add_ee_layer
 
-# Asset Earth Engine
+# === Earth Engine Asset ID ===
 ASSET_ID = "users/mrgridhoarazzak/klasifikasi_asli_sangir"
 
-# Parameter visualisasi
+# === Parameter visualisasi ===
 vis_params = {
     "min": 0,
     "max": 3,
     "palette": ['#006400', '#FFD700', '#FF0000', '#0000FF']
 }
 
-# Tampilan di Streamlit
+# === UI Streamlit ===
 st.set_page_config(layout="wide")
 st.title("🌍 Peta Klasifikasi Sangir")
 st.markdown("**Hasil klasifikasi tutupan lahan di wilayah Sangir berdasarkan Google Earth Engine**")
 
+# === Tampilkan peta ===
 try:
     image_klasifikasi = ee.Image(ASSET_ID)
     m = folium.Map(location=[1.1, 125.4], zoom_start=10)
