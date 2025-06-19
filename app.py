@@ -46,7 +46,7 @@ st.markdown("**Hasil klasifikasi tutupan lahan wilayah Sangir berdasarkan Google
 
 try:
     image = ee.Image(ASSET_ID)
-    m = folium.Map(location=[1.1, 125.4], zoom_start=10)
+    m = folium.Map(location=[-1.80, 101.15], zoom_start=10)
     m.add_ee_layer(image, vis_params, "Klasifikasi")
     folium.LayerControl().add_to(m)
     folium_static(m)
