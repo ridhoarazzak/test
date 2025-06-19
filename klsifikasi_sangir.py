@@ -4,11 +4,11 @@ from streamlit_folium import folium_static
 import ee
 import json
 
-# === Ambil kredensial dari secrets (TOML format, langsung dict) ===
+# === Ambil kredensial dari secrets ===
 try:
     key_data = dict(st.secrets["SERVICE_ACCOUNT_JSON"])
 
-    # Simpan sementara ke file .json
+    # Simpan ke file sementara
     key_path = "/tmp/service_account.json"
     with open(key_path, "w") as f:
         json.dump(key_data, f)
@@ -24,7 +24,7 @@ except Exception as e:
     st.error(f"❌ Gagal inisialisasi Earth Engine: {e}")
     st.stop()
 
-# === Fungsi bantu untuk tambahkan Earth Engine layer ke folium ===
+# === Fungsi bantu untuk tambahkan layer EE ke peta folium ===
 def add_ee_layer(self, ee_image_object, vis_params, name):
     try:
         map_id_dict = ee.Image(ee_image_object).getMapId(vis_params)
@@ -38,10 +38,10 @@ def add_ee_layer(self, ee_image_object, vis_params, name):
     except Exception as e:
         st.error(f"❌ Gagal menambahkan layer ke peta: {e}")
 
-# Tambahkan fungsi ini ke objek folium.Map
+# Tambahkan fungsi EE ke folium.Map
 folium.Map.add_ee_layer = add_ee_layer
 
-# === Asset dan parameter visualisasi ===
+# === Earth Engine asset dan visualisasi ===
 ASSET_ID = "users/mrgridhoarazzak/klasifikasi_asli_sangir"
 vis_params = {
     "min": 0,
@@ -49,7 +49,7 @@ vis_params = {
     "palette": ['#006400', '#FFD700', '#FF0000', '#0000FF']
 }
 
-# === Tampilan Streamlit ===
+# === Antarmuka Streamlit ===
 st.set_page_config(layout="wide")
 st.title("🌍 Peta Klasifikasi Sangir")
 st.markdown("**Hasil klasifikasi tutupan lahan di wilayah Sangir berdasarkan Google Earth Engine**")
