@@ -6,7 +6,9 @@ import json
 
 # === Ambil kredensial langsung dari secrets (format dict / TOML) ===
 try:
-    key_dict = st.secrets["SERVICE_ACCOUNT_JSON"]  # TANPA json.loads!
+    key_dict = dict(st.secrets["SERVICE_ACCOUNT_JSON"])
+with open(key_path, "w") as f:
+    json.dump(key_dict, f)
 
     # Simpan sebagai file sementara
     key_path = "/tmp/service_account.json"
