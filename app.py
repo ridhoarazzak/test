@@ -50,7 +50,7 @@ try:
     image = ee.Image(ASSET_ID)
 
     # === Load file GeoJSON lokal atau dari subfolder 'data/' ===
-    geojson_path = "data/simplified_classified_all_classes_sangir.geojson"
+    geojson_path = "data/simplified_classified_all_classes_sangir_geojson.geojson"
     if not os.path.exists(geojson_path):
         st.error(f"❌ File GeoJSON tidak ditemukan: {geojson_path}")
         st.stop()
