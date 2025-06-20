@@ -65,17 +65,35 @@ try:
         st.error("❌ Kolom 'class' tidak ditemukan dalam GeoJSON.")
         st.stop()
 
+    # 1. Map class_id ke nama kelas
+    class_map = {
+        0: "Hutan",
+        1: "Pertanian",
+        2: "Permukiman",
+        3: "Air"
+    }
+
+    # 2. Warna RGB peta (harus cocok dengan warna layer di peta)
+    color_map = {
+        "Hutan": "#008000",        # Hijau
+        "Pertanian": "#FFFF00",    # Kuning
+        "Permukiman": "#FF0000",   # Merah
+        "Air": "#0000FF"           # Biru
+    }
+
+    # 3. Hitung luas dalam hektar
     gdf["luas_ha"] = gdf.geometry.to_crs(epsg=3857).area / 10_000
 
-    # Map class_id ke nama kelas
-    class_map = {0: "Hutan", 1: "Pertanian", 2: "Permukiman", 3: "Air"}
+    # 4. Agregasi dan pemetaan
     df_luas = gdf.groupby("class")["luas_ha"].sum().reset_index()
     df_luas["kelas"] = df_luas["class"].map(class_map).fillna("Lainnya")
-    df_luas = df_luas[["kelas", "luas_ha"]].sort_values(by="luas_ha", ascending=False)
+    df_luas["warna"] = df_luas["kelas"].map(color_map).fillna("#888888")
+    df_luas = df_luas[["kelas", "luas_ha", "warna"]].sort_values(by="luas_ha", ascending=False)
 
+    # 5. Tampilkan tabel
     st.dataframe(df_luas.style.format({"luas_ha": "{:,.2f} ha"}), use_container_width=True)
 
-    # Chart
+    # 6. Bar chart dengan warna sesuai RGB
     fig = px.bar(
         df_luas,
         x="kelas",
@@ -83,14 +101,15 @@ try:
         title="Luas Lahan per Kelas (hektar)",
         labels={"kelas": "Kelas", "luas_ha": "Luas (ha)"},
         color="kelas",
+        color_discrete_map=color_map,
         text_auto=".2s",
         height=400
     )
     fig.update_traces(textposition="outside")
     st.plotly_chart(fig, use_container_width=True)
 
-    # Tombol Download CSV
-    csv = df_luas.to_csv(index=False).encode("utf-8")
+    # 7. Tombol download
+    csv = df_luas[["kelas", "luas_ha"]].to_csv(index=False).encode("utf-8")
     st.download_button(
         label="⬇️ Download Data Luas per Kelas",
         data=csv,
