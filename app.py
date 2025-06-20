@@ -1,18 +1,17 @@
-import streamlit as st
-import folium
-from streamlit_folium import st_folium
-import ee
 import json
-import pandas as pd
-import geopandas as gpd
+import ee
+import streamlit as st
 
 try:
-    service_account_info = st.secrets["SERVICE_ACCOUNT_JSON"]  # TANPA json.loads
+    # ⬇️ Parse dari string JSON ke dict
+    service_account_info = json.loads(st.secrets["SERVICE_ACCOUNT_JSON"])
 
+    # ⬇️ Inisialisasi kredensial Earth Engine
     credentials = ee.ServiceAccountCredentials(
         service_account_info["client_email"],
         key_data=service_account_info
     )
+
     ee.Initialize(credentials)
 
 except Exception as e:
