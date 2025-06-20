@@ -69,7 +69,7 @@ try:
 
     # Map class_id ke nama kelas
     class_map = {0: "Hutan", 1: "Pertanian", 2: "Permukiman", 3: "Air"}
-    df_luas = gdf.groupby("class_id")["luas_ha"].sum().reset_index()
+    df_luas = gdf.groupby("class")["luas_ha"].sum().reset_index()
     df_luas["kelas"] = df_luas["class"].map(class_map).fillna("Lainnya")
     df_luas = df_luas[["kelas", "luas_ha"]].sort_values(by="luas_ha", ascending=False)
 
