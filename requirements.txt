@@ -3,3 +3,4 @@ folium
 streamlit-folium
 earthengine-api>=0.1.342
 geopandas==0.14.1
+pandas
