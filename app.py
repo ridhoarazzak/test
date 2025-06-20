@@ -11,11 +11,11 @@ import os
 st.set_page_config(layout="wide")
 st.title("🌍 Peta Klasifikasi Penutupan & Penggunaan Lahan - Sangir")
 
-try:
-    service_account_info = json.loads(st.secrets["SERVICE_ACCOUNT_JSON"])
+    try:
+    service_account_info = st.secrets["SERVICE_ACCOUNT_JSON"]
     credentials = ee.ServiceAccountCredentials(
         service_account_info["client_email"],
-        key_data=service_account_info
+        key_data=dict(service_account_info)
     )
     ee.Initialize(credentials)
 except Exception as e:
