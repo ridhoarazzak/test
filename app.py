@@ -2,22 +2,24 @@ import json
 import ee
 import streamlit as st
 
-try:
-    # ⬇️ Parse dari string JSON ke dict
-    service_account_info = json.loads(st.secrets["SERVICE_ACCOUNT_JSON"])
 
-    # ⬇️ Inisialisasi kredensial Earth Engine
+try:
+    # Ambil string JSON dari st.secrets
+    service_account_str = st.secrets["SERVICE_ACCOUNT_JSON"]
+
+    # Ubah string JSON jadi dict → untuk ambil email
+    service_account_info = json.loads(service_account_str)
+
+    # Inisialisasi kredensial GEE
     credentials = ee.ServiceAccountCredentials(
         service_account_info["client_email"],
-        key_data=service_account_info
+        key_data=service_account_str  # harus STRING, bukan dict!
     )
-
     ee.Initialize(credentials)
 
 except Exception as e:
     st.error(f"❌ Gagal inisialisasi Earth Engine:\n\n{e}")
     st.stop()
-
 # === Fungsi bantu: Tambahkan Layer EE ke Folium ===
 def add_ee_layer(self, ee_image_object, vis_params, name):
     try:
