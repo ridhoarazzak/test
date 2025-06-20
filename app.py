@@ -3,9 +3,8 @@ import ee
 import streamlit as st
 import folium
 import geopandas as gpd
-import os
-from streamlit_folium import st_folium
 import plotly.express as px
+from streamlit_folium import st_folium
 
 # → Inisialisasi Earth Engine
 try:
@@ -20,7 +19,7 @@ except Exception as e:
     st.error(f"❌ Gagal inisialisasi Earth Engine:\n\n{e}")
     st.stop()
 
-# → Tambah layer EE ke Folium
+# → Fungsi tambah layer EE ke folium
 def add_ee_layer(self, ee_image_object, vis_params, name):
     try:
         map_id_dict = ee.Image(ee_image_object).getMapId(vis_params)
@@ -37,9 +36,10 @@ def add_ee_layer(self, ee_image_object, vis_params, name):
 folium.Map.add_ee_layer = add_ee_layer
 
 # → Tampilkan Peta
+st.markdown("### 🌍 Peta Klasifikasi RGB")
 ASSET_ID = "projects/ee-mrgridhoarazzak/assets/Klasifikasi_Sangir_2024_aset_asli"
 vis_params = {"bands": ["vis-red", "vis-green", "vis-blue"], "min": 0, "max": 255}
-st.markdown("### 🌍 Peta Klasifikasi RGB")
+
 try:
     image = ee.Image(ASSET_ID)
     m = folium.Map(location=[-1.5269, 101.3002], zoom_start=10)
@@ -56,14 +56,26 @@ GEOJSON_URL = "https://raw.githubusercontent.com/ridhoarazzak/test/main/simplifi
 
 try:
     gdf = gpd.read_file(GEOJSON_URL)
+
+    if gdf.empty:
+        st.warning("⚠️ GeoJSON berhasil dimuat tapi tidak ada data (kosong).")
+        st.stop()
+
+    if "class_id" not in gdf.columns:
+        st.error("❌ Kolom 'class_id' tidak ditemukan dalam GeoJSON.")
+        st.stop()
+
     gdf["luas_ha"] = gdf.geometry.to_crs(epsg=3857).area / 10_000
+
+    # Map class_id ke nama kelas
     class_map = {0: "Hutan", 1: "Pertanian", 2: "Permukiman", 3: "Air"}
     df_luas = gdf.groupby("class_id")["luas_ha"].sum().reset_index()
-    df_luas["kelas"] = df_luas["class_id"].map(class_map)
+    df_luas["kelas"] = df_luas["class_id"].map(class_map).fillna("Lainnya")
     df_luas = df_luas[["kelas", "luas_ha"]].sort_values(by="luas_ha", ascending=False)
 
     st.dataframe(df_luas.style.format({"luas_ha": "{:,.2f} ha"}), use_container_width=True)
 
+    # Chart
     fig = px.bar(
         df_luas,
         x="kelas",
@@ -71,12 +83,13 @@ try:
         title="Luas Lahan per Kelas (hektar)",
         labels={"kelas": "Kelas", "luas_ha": "Luas (ha)"},
         color="kelas",
-        text=df_luas["luas_ha"].round(2),
+        text_auto=".2s",
         height=400
     )
     fig.update_traces(textposition="outside")
     st.plotly_chart(fig, use_container_width=True)
 
+    # Tombol Download CSV
     csv = df_luas.to_csv(index=False).encode("utf-8")
     st.download_button(
         label="⬇️ Download Data Luas per Kelas",
@@ -86,5 +99,5 @@ try:
     )
 
 except Exception as e:
-    st.warning("⚠️ Gagal memproses GeoJSON dari URL:")
+    st.error("❌ Gagal memproses GeoJSON dari URL.")
     st.text(str(e))
