@@ -1,6 +1,10 @@
 import json
 import ee
 import streamlit as st
+import folium  # ⬅️ ini yang kurang
+import geopandas as gpd
+import os
+from streamlit_folium import st_folium
 
 
 try:
