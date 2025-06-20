@@ -7,12 +7,8 @@ import pandas as pd
 import geopandas as gpd
 
 try:
-    import json
-    # Parsing string JSON dari st.secrets
-    service_account_str = st.secrets["SERVICE_ACCOUNT_JSON"]
-    service_account_info = json.loads(service_account_str)
+    service_account_info = st.secrets["SERVICE_ACCOUNT_JSON"]  # TANPA json.loads
 
-    # Inisialisasi Earth Engine
     credentials = ee.ServiceAccountCredentials(
         service_account_info["client_email"],
         key_data=service_account_info
