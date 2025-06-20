@@ -1,7 +1,8 @@
-streamlit==1.33.0
-folium==0.15.1
-streamlit-folium==0.14.0
-geopandas==0.13.2
-shapely==2.0.1
-fiona==1.9.5
-earthengine-api>=0.1.390
+streamlit>=1.28.0
+earthengine-api>=0.1.374
+folium>=0.14.0
+streamlit-folium>=0.15.0
+geopandas>=0.14.0
+plotly>=5.17.0
+pandas>=2.0.0
+openpyxl>=3.1.0
