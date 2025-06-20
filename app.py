@@ -49,7 +49,7 @@ try:
     band_names = image.bandNames().getInfo()
     st.write("Band citra:", band_names)
 
-    m = folium.Map(location=[-1.5269, 101.3002, zoom_start=10)
+    m = folium.Map(location=[-1.5269, 101.3002], zoom_start=10)
     m.add_ee_layer(image, vis_params, "RGB Image")
     folium.LayerControl().add_to(m)
 
