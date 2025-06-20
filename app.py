@@ -5,13 +5,9 @@ import ee
 import json
 import pandas as pd
 import geopandas as gpd
-import os
 
-# === Inisialisasi Earth Engine dari Streamlit secrets ===
-st.set_page_config(layout="wide")
-st.title("🌍 Peta Klasifikasi Penutupan & Penggunaan Lahan - Sangir")
-
-    try:
+# === Inisialisasi Earth Engine dari st.secrets ===
+try:
     service_account_info = st.secrets["SERVICE_ACCOUNT_JSON"]
     credentials = ee.ServiceAccountCredentials(
         service_account_info["client_email"],
