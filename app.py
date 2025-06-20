@@ -8,10 +8,12 @@ import geopandas as gpd
 
 # === Inisialisasi Earth Engine dari st.secrets ===
 try:
-    service_account_info = st.secrets["SERVICE_ACCOUNT_JSON"]
+    # Parse string JSON dari secrets
+    service_account_info = json.loads(st.secrets["SERVICE_ACCOUNT_JSON"])
+    
     credentials = ee.ServiceAccountCredentials(
         service_account_info["client_email"],
-        key_data=dict(service_account_info)
+        key_data=service_account_info
     )
     ee.Initialize(credentials)
 except Exception as e:
