@@ -5,16 +5,21 @@ import ee
 import json
 import pandas as pd
 import geopandas as gpd
+import os
 
-# === Inisialisasi Earth Engine dari st.secrets ===
+# === Inisialisasi Earth Engine dari Streamlit secrets ===
+st.set_page_config(layout="wide")
+st.title("🌍 Peta Klasifikasi Penutupan & Penggunaan Lahan - Sangir")
+
 try:
     service_account_info = json.loads(st.secrets["SERVICE_ACCOUNT_JSON"])
     credentials = ee.ServiceAccountCredentials(
-        service_account_info["client_email"], key_data=service_account_info
+        service_account_info["client_email"],
+        key_data=service_account_info
     )
     ee.Initialize(credentials)
 except Exception as e:
-    st.error("❌ Gagal inisialisasi Earth Engine: %s" % e)
+    st.error(f"❌ Gagal inisialisasi Earth Engine:\n\n{e}")
     st.stop()
 
 # === Fungsi bantu: Tambahkan Layer EE ke Folium ===
@@ -29,11 +34,11 @@ def add_ee_layer(self, ee_image_object, vis_params, name):
             control=True,
         ).add_to(self)
     except Exception as e:
-        st.error("❌ Gagal menambahkan layer EE: %s" % e)
+        st.error(f"❌ Gagal menambahkan layer EE:\n\n{e}")
 
 folium.Map.add_ee_layer = add_ee_layer
 
-# === Pengaturan Visualisasi ===
+# === Tampilkan Peta EE ===
 ASSET_ID = "projects/ee-mrgridhoarazzak/assets/Klasifikasi_Sangir_2024_aset_asli"
 vis_params = {
     "bands": ["vis-red", "vis-green", "vis-blue"],
@@ -41,30 +46,25 @@ vis_params = {
     "max": 255
 }
 
-# === UI Streamlit ===
-st.set_page_config(layout="wide")
-st.title("🌍 Peta Klasifikasi Penutupan & Penggunaan Lahan - Sangir")
-st.markdown("Visualisasi RGB berbasis Google Earth Engine")
+st.markdown("Visualisasi RGB dari citra klasifikasi Google Earth Engine")
 
-# === Load dan Tampilkan Peta ===
 try:
     image = ee.Image(ASSET_ID)
     band_names = image.bandNames().getInfo()
     st.write("📌 Band citra:", band_names)
 
     m = folium.Map(location=[-1.5269, 101.3002], zoom_start=10)
-    m.add_ee_layer(image, vis_params, "Citra RGB")
+    m.add_ee_layer(image, vis_params, "Klasifikasi RGB")
     folium.LayerControl().add_to(m)
 
     st_folium(m, width=700, height=500)
-
 except Exception as e:
-    st.error("❌ Gagal menampilkan data: %s" % e)
+    st.error(f"❌ Gagal menampilkan data peta:\n\n{e}")
 
-# === Analisis Luas per Kelas (dari geojson) ===
+# === Analisis Luas Penutup Lahan ===
 st.subheader("📊 Luas Kelas Penutup Lahan")
 
-# Mapping ID kelas
+# Mapping ID kelas ke label
 class_map = {
     0: "Hutan",
     1: "Pertanian",
@@ -72,33 +72,42 @@ class_map = {
     3: "Air"
 }
 
-try:
-    # Load geojson lokal (sudah diupload via Streamlit file uploader atau disiapkan sebelumnya)
-    gdf = gpd.read_file("simplified_classified_all_classes_sangir_geojson.geojson")
+# Upload file GeoJSON jika tidak ada
+geojson_path = "simplified_classified_all_classes_sangir_geojson.geojson"
+uploaded = None
 
-    # Hitung luas (dalam hektar)
-    gdf["luas_ha"] = gdf.geometry.to_crs(epsg=3857).area / 10_000
+if not os.path.exists(geojson_path):
+    uploaded = st.file_uploader("📂 Upload file GeoJSON klasifikasi:", type=["geojson"])
+    if uploaded:
+        with open(geojson_path, "wb") as f:
+            f.write(uploaded.read())
 
-    # Agregasi per kelas
-    df_luas = gdf.groupby("class_id")["luas_ha"].sum().reset_index()
-    df_luas["kelas"] = df_luas["class_id"].map(class_map)
-    df_luas = df_luas[["kelas", "luas_ha"]].sort_values(by="luas_ha", ascending=False)
+if os.path.exists(geojson_path):
+    try:
+        gdf = gpd.read_file(geojson_path)
 
-    # Tampilkan tabel
-    st.dataframe(df_luas.style.format({"luas_ha": "{:,.2f} ha"}), use_container_width=True)
+        # Hitung luas dalam hektar
+        gdf["luas_ha"] = gdf.geometry.to_crs(epsg=3857).area / 10_000
 
-    # Tampilkan chart
-    st.bar_chart(df_luas.set_index("kelas"))
+        # Kelompokkan berdasarkan class_id
+        df_luas = gdf.groupby("class_id")["luas_ha"].sum().reset_index()
+        df_luas["kelas"] = df_luas["class_id"].map(class_map)
+        df_luas = df_luas[["kelas", "luas_ha"]].sort_values(by="luas_ha", ascending=False)
 
-    # Tombol download CSV
-    csv = df_luas.to_csv(index=False).encode("utf-8")
-    st.download_button(
-        label="⬇️ Download Luas Kelas (.csv)",
-        data=csv,
-        file_name="luas_penutup_lahan_sangir.csv",
-        mime="text/csv"
-    )
+        st.dataframe(df_luas.style.format({"luas_ha": "{:,.2f} ha"}), use_container_width=True)
+        st.bar_chart(df_luas.set_index("kelas"))
 
-except Exception as e:
-    st.warning("⚠️ Gagal membaca atau memproses file GeoJSON. Pastikan file bernama `simplified_classified_all_classes_sangir_geojson.geojson` tersedia.")
-    st.text(str(e))
+        # Tombol Download CSV
+        csv = df_luas.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            label="⬇️ Download Luas Kelas (.csv)",
+            data=csv,
+            file_name="luas_penutup_lahan_sangir.csv",
+            mime="text/csv"
+        )
+
+    except Exception as e:
+        st.warning("⚠️ Gagal memproses GeoJSON:")
+        st.text(str(e))
+else:
+    st.info("📎 Belum ada file GeoJSON. Upload file terlebih dahulu.")
